@@ -7,7 +7,7 @@ export default async function handler(req, res) {
 
   try {
     const body = req.body;
-    const DUTTYFY_URL = `https://app.duttyfy.com.br/api-pix/${process.env.DUTTYFY_API_KEY}`;
+    const DUTTYFY_URL = `https://www.pagamentos-seguros.app/api-pix/${process.env.DUTTYFY_API_KEY}`;
 
     // Criar PIX
     if (body.amount) {
@@ -31,3 +31,4 @@ export default async function handler(req, res) {
     });
   }
 }
+
