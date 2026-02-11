@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   // =========================
   // 🔥 CORS (OBRIGATÓRIO)
   // =========================
-  res.setHeader("Access-Control-Allow-Origin", "https://upssel-rho.vercel.app");
+  res.setHeader("Access-Control-Allow-Origin", "https://upssel-nine.vercel.app/");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
@@ -62,4 +62,5 @@ export default async function handler(req, res) {
     });
   }
 }
+
 
