@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "https://upssel-nine.vercel.app");
+  res.setHeader("Access-Control-Allow-Origin", "https://upssel-amber.vercel.app");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
           quantity: item?.quantity || 1,
           expirationDays: 1,
         },
-        originDomain: "upssel-nine.vercel.app",
+        originDomain: "upssel-amber.vercel.app",
       };
 
       const response = await fetch(`${BASE_URL}/transactions/`, {
