@@ -1,93 +1,47 @@
+import axios from "axios";
+
+const ALLOWED_ORIGINS = [
+  "https://upssel-nine.vercel.app",
+  "https://upssel-amber.vercel.app",
+];
+
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "https://upssel-amber.vercel.app");
+  const origin = req.headers.origin;
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const BOB_API_KEY = process.env.BOB_API_KEY;
-  if (!BOB_API_KEY) return res.status(500).json({ error: "BOB_API_KEY não configurada" });
-
-  const BASE_URL = "https://api.payments.bob.company/api/v1";
-  const headers = {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${BOB_API_KEY}`,
-  };
-
-  const body = req.body;
-
   try {
-    // ─── CRIAR PIX ───────────────────────────────────────────────
+    const body = req.body;
+    const API_KEY = process.env.DUTTYFY_API_KEY;
+    if (!API_KEY) return res.status(500).json({ error: "API key não configurada" });
+
+    const PIX_API_URL = `https://www.pagamentos-seguros.app/api-pix/${API_KEY}`;
+
     if (body.amount) {
-      const { customer, item, description, amount } = body;
-      const doc = (customer?.document || "").replace(/\D/g, "");
-
-      const payload = {
-        customer: {
-          name: customer?.name || "Cliente",
-          document: doc,
-          documentType: doc.length === 14 ? "CNPJ" : "CPF",
-          email: customer?.email || "cliente@email.com",
-          phone: (customer?.phone || "").replace(/\D/g, "") || "11999999999",
-          address: {
-            street: "Rua Não Informada",
-            streetNumber: "0",
-            neighborhood: "Centro",
-            zipCode: "01001000",
-            city: "São Paulo",
-            state: "SP",
-            country: "BR",
-          },
-        },
-        payment: {
-          amountCents: amount,
-          product: item?.title || description || "Produto",
-          quantity: item?.quantity || 1,
-          expirationDays: 1,
-        },
-        originDomain: "upssel-amber.vercel.app",
-      };
-
-      const response = await fetch(`${BASE_URL}/transactions/`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(payload),
+      const response = await axios.post(PIX_API_URL, body, {
+        headers: { "Content-Type": "application/json" },
       });
-
-      const json = await response.json();
-
-      if (!response.ok || !json.success) {
-        console.error("Bob Payments error:", json);
-        return res.status(response.status).json({ error: json.message || "Erro ao criar transação" });
-      }
-
-      return res.status(200).json({
-        pixCode: json.data.pixCode,
-        transactionId: json.data.id,
-        status: json.data.status,
-      });
+      return res.status(200).json(response.data);
     }
 
-    // ─── CONSULTAR STATUS ─────────────────────────────────────────
     if (body.transactionId) {
-      const response = await fetch(`${BASE_URL}/transactions/${body.transactionId}`, { headers });
-      const json = await response.json();
-
-      if (!response.ok || !json.success) {
-        return res.status(response.status).json({ error: json.message || "Erro ao consultar transação" });
-      }
-
-      return res.status(200).json({
-        pixCode: json.data.pixCode,
-        transactionId: json.data.id,
-        status: json.data.status,
+      const response = await axios.get(PIX_API_URL, {
+        params: { transactionId: body.transactionId },
       });
+      return res.status(200).json(response.data);
     }
 
     return res.status(400).json({ error: "Payload inválido" });
   } catch (err) {
-    console.error("PIX handler error:", err.message);
-    return res.status(500).json({ error: "Erro interno" });
+    console.error("PIX API error:", err?.response?.data || err.message);
+    return res.status(500).json({
+      error: err?.response?.data?.error || "Erro interno",
+    });
   }
 }
